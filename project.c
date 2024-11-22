@@ -106,7 +106,7 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 
 /* instruction decode */
 /* 15 Points */
-int instruction_decode(unsigned op,struct_controls *controls)
+int instruction_decode(unsigned op, struct_controls *controls)
 {
     // Clear all control signals
     memset(controls, 0, sizeof(struct_controls));
@@ -158,6 +158,18 @@ int instruction_decode(unsigned op,struct_controls *controls)
 
         case 0x02: // J
             controls->Jump = 1;
+            break;
+
+        case 0x0A: // SLTI
+            controls->ALUSrc = 1;
+            controls->RegWrite = 1;
+            controls->ALUOp = 2;
+            break;
+
+        case 0x0B: // SLTIU
+            controls->ALUSrc = 1;
+            controls->RegWrite = 1;
+            controls->ALUOp = 3;
             break;
 
         default:

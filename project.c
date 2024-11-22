@@ -119,7 +119,11 @@ int instruction_decode(unsigned op,struct_controls *controls)
 /* 5 Points */
 void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigned *data2)
 {
+    //Copy data from r1 to data1
+    *data1 = Reg[r1];
 
+    //Copy data from r2 to data2
+    *data2 = Reg[r2];
 }
 
 
@@ -149,7 +153,34 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 /* 10 Points */
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
+    //If RegWrite is deasserted, then don't write to a register
+    if (RegWrite==0) {
+        return;
+    }
 
+    //If MemtoReg is deasserted, use ALUresult. Otherwise, use memdata
+    if (MemtoReg==0) {
+        //Using ALUresult
+        
+        //If RegDst is 0, write to r2. Otherwise, write to r3
+        if (RegDst==0) {
+            Reg[r2] = ALUresult; //write ALUresult to r2
+        }
+        else {
+            Reg[r3] = ALUresult; //write ALUresult to r3
+        }
+    }
+    else {
+        //Using memdata
+
+        //If RegDst is 0, write to r2. Otherwise, write to r3
+        if (RegDst==0) {
+            Reg[r2] = memdata; //write memdata to r2
+        }
+        else {
+            Reg[r3] = memdata; //write memdata to r3
+        }
+    }
 }
 
 /* PC update */

@@ -5,7 +5,59 @@
 /* 10 Points */
 void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 {
+    //Switch operation based on ALUControl (0 to 7)
+    switch(ALUControl){
+        case 0:
+            //Addition
+            *ALUresult = A + B;
+            break;
+        case 1:
+            //Subtraction
+            *ALUresult = A - B;
+            break;
+        case 2:
+            //Set less than (signed)
+            if (((signed) A) < ((signed) B)){
+                *ALUresult = 1;
+            }
+            else {
+                *ALUresult = 0;
+            }
+            break;
+        case 3:
+            //Set less than (unsigned)
+            if (A < B){
+                *ALUresult = 1;
+            }
+            else {
+                *ALUresult = 0;
+            }
+            break;
+        case 4:
+            //Bitwise AND
+            *ALUresult = A & B;
+            break;
+        case 5:
+            //Bitwise OR
+            *ALUresult = A | B;
+            break;
+        case 6:
+            //Bitshift left by 16 bits
+            *ALUresult = B << 16;
+            break;
+        case 7:
+            //Bitwise NOT
+            *ALUresult = ~A;
+            break;
+    }
 
+    //Set Zero based on ALUresult
+    if (*ALUresult == 0) {
+        *Zero = 1;
+    }
+    else {
+        *Zero = 0;
+    }
 }
 
 /* instruction fetch */
@@ -119,7 +171,11 @@ int instruction_decode(unsigned op,struct_controls *controls)
 /* 5 Points */
 void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigned *data2)
 {
+    //Copy data from r1 to data1
+    *data1 = Reg[r1];
 
+    //Copy data from r2 to data2
+    *data2 = Reg[r2];
 }
 
 
@@ -134,7 +190,51 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 /* 10 Points */
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
+    //Check if this is an r type
+    if (ALUOp < 7) {
+        //It isn't an r type, so use whatever is set.
+        //If ALUSrc is deasserted, use data2. Otherwise, use extended_value
+        if (ALUSrc == 0) {
+            ALU(data1, data2, ALUOp, ALUresult, Zero);
+        }
+        else {
+            ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+        }
+    }
+    else {
+        //It is an r type, determine which one
+        switch (funct) {
+            case 0x20:
+                //Add
+                ALU(data1, data2, 0, ALUresult, Zero);
+                break;
+            case 0x22:
+                //Subtract
+                ALU(data1, data2, 1, ALUresult, Zero);
+                break;
+            case 0x24:
+                //And
+                ALU(data1, data2, 4, ALUresult, Zero);
+                break;
+            case 0x25:
+                //Or
+                ALU(data1, data2, 5, ALUresult, Zero);
+                break;
+            case 0x2A:
+                //Set less than (signed)
+                ALU(data1, data2, 2, ALUresult, Zero);
+                break;
+            case 0x2B:
+                //Set less than (unsigned)
+                ALU(data1, data2, 3, ALUresult, Zero);
+                break;
+            default:
+                return 1; //Halt, invalid function
+        }
+    }
 
+    //End function without halt
+    return 0;
 }
 
 /* Read / Write Memory */
@@ -149,7 +249,34 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 /* 10 Points */
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
+    //If RegWrite is deasserted, then don't write to a register
+    if (RegWrite==0) {
+        return;
+    }
 
+    //If MemtoReg is deasserted, use ALUresult. Otherwise, use memdata
+    if (MemtoReg==0) {
+        //Using ALUresult
+
+        //If RegDst is 0, write to r2. Otherwise, write to r3
+        if (RegDst==0) {
+            Reg[r2] = ALUresult; //write ALUresult to r2
+        }
+        else {
+            Reg[r3] = ALUresult; //write ALUresult to r3
+        }
+    }
+    else {
+        //Using memdata
+
+        //If RegDst is 0, write to r2. Otherwise, write to r3
+        if (RegDst==0) {
+            Reg[r2] = memdata; //write memdata to r2
+        }
+        else {
+            Reg[r3] = memdata; //write memdata to r3
+        }
+    }
 }
 
 /* PC update */

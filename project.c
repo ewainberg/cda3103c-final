@@ -195,7 +195,15 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 /* 10 Points */
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
+	// Check if the sign bit (bit 15) is 1, indicating a negative number
+	if (offset & 0x8000) {
+		// Extends with 1s, negative number
+		*extended_value = offset | 0xFFFF0000; 
 
+	} else {
+		// Extends with 0s, positive number
+		*extended_value = offset & 0x0000FFFF;
+	}
 }
 
 /* ALU operations */
@@ -253,7 +261,22 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
+    // Check if the address is word-aligned and within bounds
+    if (ALUresult % 4 != 0 || ALUresult >= 0x10000) {
+        return 1; // Halt: address not word-aligned or out of bounds
+    }
 
+    if (MemRead) {
+        // Read data from memory 
+        *memdata = Mem[ALUresult >> 2];
+    }
+
+    if (MemWrite) {
+        // Write data to memory 
+        Mem[ALUresult >> 2] = data2;
+    }
+
+    return 0; // Success
 }
 
 
@@ -295,6 +318,17 @@ void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,
 /* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
+	// Update PC for normal instruction execution
+	*PC += 4;
 
+	// Handle Branch
+	if (Branch && Zero) {
+		*PC += (extended_value << 2);
+	}
+
+	// Handle jump
+	if (Jump) {
+		*PC = (*PC & 0xF0000000) | (jsec << 2); // Set PC to jump target
+	}
 }
 

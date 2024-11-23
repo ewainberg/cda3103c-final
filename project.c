@@ -261,19 +261,24 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-    // Check if the address is word-aligned and within bounds
-    if (ALUresult % 4 != 0 || ALUresult >= 0x10000) {
-        return 1; // Halt: address not word-aligned or out of bounds
-    }
-
     if (MemRead) {
         // Read data from memory 
         *memdata = Mem[ALUresult >> 2];
+        
+        // Check if the address is word-aligned and within bounds
+        if (ALUresult % 4 != 0 || ALUresult >= 0x10000) {
+            return 1; // Halt: address not word-aligned or out of bounds
+        }
     }
 
     if (MemWrite) {
         // Write data to memory 
         Mem[ALUresult >> 2] = data2;
+        
+        // Check if the address is word-aligned and within bounds
+        if (ALUresult % 4 != 0 || ALUresult >= 0x10000) {
+            return 1; // Halt: address not word-aligned or out of bounds
+        }
     }
 
     return 0; // Success
